@@ -1,16 +1,69 @@
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
 from aiogram.types import Message
+from aiogram import Router, F
+from aiogram.filters import Command, StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.types import Message, ReplyKeyboardRemove
+
 
 BOT_TOKEN = ''
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
+choosing_start_step = ["Я готов к приключениям и хочу начать!", "Я хочу отказаться от квеста и пройти его позднее"]
+choosing_end_27_38_20_25_step = ['/start', '/help']
+choosing_step_1 = ["Присоединиться к группе", "Отказаться и идти самостоятельно"]
+choosing_step_2 = ["Идти вперед по карте Сяо", "Исследовать боковые коридоры"]
+choosing_step_3 = ["Принять предложение", "Отказаться"]
+choosing_step_4 = ["Сразиться с ними", "Попытаться обойти"]
+choosing_step_5 = ["Взять его с собой", "Оставить на месте"]
+choosing_step_6 = ["Сразиться с ней", "Убежать"]
+choosing_step_7_13 = ["Попытаться преодолеть их", "Вернуться назад"]
+choosing_step_8 = ["Попытаться избежать заклятия", "Активировать его ради сокровища"]
+choosing_step_9_12_14_17 = ["Забрать всё себе", "Забрать и вернуться к группе"]
+choosing_step_10 = ["Бежать с артефактом", "Попытаться использовать артефакт против врагов"]
+choosing_step_11 = ["Попытаться забрать артефакт себе", "Уйти, чтобы избежать конфликта"]
+choosing_step_15 = ["Продолжить путь вместе с ней", "Продолжить свой путь в одиночестве"]
+choosing_step_16 = ["Сразиться с врагами", "Попытаться убежать"]
+choosing_step_18_26 = ["Решить этот вопрос самостоятельно", "Вернуться домой и посоветоваться с Чжун Ли"]
+choosing_step_19 = ["Поделиться сокровищами с группой", "Пойти к выходу из пещеры одному, пряча артефакт"]
+choosing_step_21 = ["Забрать и вернуться к группе", "Убить всю группу и переместиться с артефактом подальше от пещеры"]
+choosing_step_22 = ["Продолжить использование", "Вернуть на место"]
+choosing_step_23 = ["Рискнуть и сразиться с ней", "Обнять её и бежать со всех ног"]
+choosing_step_24 = ["Продолжить поиски артефакта", "Выйти из пещеры"]
+
+
+class Available(StatesGroup):
+    available_start_step = State()
+    available_end_step = State()
+    available_step_1 = State()
+    available_step_2 = State()
+    available_step_3 = State()
+    available_step_4 = State()
+    available_step_5 = State()
+    available_step_6 = State()
+    available_step_7_13 = State()
+    available_step_8 = State()
+    available_step_9_12_14_17 = State()
+    available_step_10 = State()
+    available_step_11 = State()
+    available_step_15 = State()
+    available_step_16 = State()
+    available_step_18_26 = State()
+    available_step_19 = State()
+    available_step_20 = State()
+    available_step_21 = State()
+    available_step_22 = State()
+    available_step_23 = State()
+    available_step_24 = State()
+
 
 # начать квест
 @dp.message(Command(commands=["start"]))
-async def start(message: types.Message):
+async def start(message: types.Message, state: FSMContext):
     await message.answer("Вы отправились на поиски забытой пещеры, о которой слышали много легенд. "
                          "По пути вы встречаете различных персонажей из игры Genshin Impact, "
                          "которые могут помочь или помешать вам в поисках.",
@@ -23,20 +76,22 @@ async def start(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_start_step)
 
 
 # выход из квеста
-@dp.message(lambda message: message.text == "Я хочу отказаться от квеста и пройти его позднее")
-async def run_away(message: types.Message):
+@dp.message(Available.available_start_step, F.text.in_(choosing_start_step[1]))
+async def run_away(message: types.Message, state: FSMContext):
     await message.answer("До скорой встречи, Путешественник) Надеюсь, что мы еще увидимся."
                          "\nНажмите /start, чтобы начать квест"
                          "\nНажмите /help, чтобы понять, что происходит",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # начало квеста, выбор 1
-@dp.message(lambda message: message.text == "Я готов к приключениям и хочу начать!")
-async def go_left(message: types.Message):
+@dp.message(Available.available_start_step, F.text.in_(choosing_start_step[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Вы видите перед собой Сяо, который предлагает вам присоединиться к его группе "
                          "исследователей. Они могут рассказать вам о скоровищах спрятанных внутри.",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -50,11 +105,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_1)
 
 
 # выбор 2
-@dp.message(lambda message: message.text == "Присоединиться к группе")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_1, F.text.in_(choosing_step_1[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Сяо говорит, что внутри пещеры находится артефакт, потерянный когда-то архонтами. "
                          "Вместе с группой вы находите вход в пещеру, но перед вами возникает выбор:",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -68,11 +124,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_2)
 
 
 # выбор 3
-@dp.message(lambda message: message.text == "Отказаться и идти самостоятельно")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_1, F.text.in_(choosing_step_1[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Идя самостоятельно, вы сталкиваетесь с Чичи (Ци ци), которая предлагает вам помощь "
                          "в обмен на часть найденного сокровища и обнимашки. ",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -86,11 +143,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_3)
 
 
 # выбор 4
-@dp.message(lambda message: message.text == "Идти вперед по карте Сяо")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_2, F.text.in_(choosing_step_2[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Вы и ваша группа приближаетесь к сундуку, в тени которого лежит странный предмет, "
                          "но замечаете, что пещера охраняется монстрами.",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -104,11 +162,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_4)
 
 
 # выбор 5
-@dp.message(lambda message: message.text == "Исследовать боковые коридоры")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_2, F.text.in_(choosing_step_2[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Исследуя темные боковые коридоры пещеры, именно вы находите древний артефакт, который "
                          "может быть ключом к разгадке тайны пещеры.",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -122,11 +181,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_5)
 
 
 # выбор 6
-@dp.message(lambda message: message.text == "Принять предложение")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_3, F.text.in_(choosing_step_3[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Приняв предложение Чичи (Ци Ци), вы приближаетесь к ней, чтобы забрать оружие, которое"
                          " она вам протягивает. В её поведении вы замечаете что-то странное и делаете шаг назад. "
                          "Она набрасывается на вас.",
@@ -141,11 +201,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_6)
 
 
 # выбор 7
-@dp.message(lambda message: message.text == "Отказаться")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_3, F.text.in_(choosing_step_3[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Отказавшись от предложения Чичи (Ци Ци), вы идете дальше одни и сталкиваетесь "
                          "с опасными ловушками.",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -159,11 +220,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_7_13)
 
 
 # выбор 8
-@dp.message(lambda message: message.text == "Сразиться с ними")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_4, F.text.in_(choosing_step_4[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("После сражения с монстрами вы находите сокровище, но оно оказывается защищено заклятием.",
                          reply_markup=types.ReplyKeyboardMarkup(
                              keyboard=[
@@ -176,11 +238,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_8)
 
 
 # выбор 9
-@dp.message(lambda message: message.text == "Попытаться обойти")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_4, F.text.in_(choosing_step_4[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Пока группа сражается с монстрами, вы обходите их и находите артефакт, а также вам "
                          "удается забрать часть сокровищ. Перед вами возникает выбор:",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -194,11 +257,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_9_12_14_17)
 
 
 # выбор 10
-@dp.message(lambda message: message.text == "Взять его с собой")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_5, F.text.in_(choosing_step_5[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Взяв артефакт, вы обнаруживаете, что он привлекает монстров.",
                          reply_markup=types.ReplyKeyboardMarkup(
                              keyboard=[
@@ -211,11 +275,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_10)
 
 
 # выбор 11
-@dp.message(lambda message: message.text == "Оставить на месте")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_5, F.text.in_(choosing_step_5[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Оставив артефакт на месте, вы продолжаете свой путь, но встречаете Чичу (Ци Ци), "
                          "которая, в отличие от вас, забрала артефакт.",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -229,11 +294,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_11)
 
 
 # выбор 12
-@dp.message(lambda message: message.text == "Сразиться с ней")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_6, F.text.in_(choosing_step_6[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("В результате схватки с Чичей (Ци Ци) вы побеждаете её, но теперь перед вами стоит выбор,"
                          "что делать с артефактом:",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -247,11 +313,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_9_12_14_17)
 
 
 # выбор 13
-@dp.message(lambda message: message.text == "Убежать")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_6, F.text.in_(choosing_step_6[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Убежав от Чичи (Ци Ци), вы продолжаете свой путь, но сталкиваетесь с ловушками.",
                          reply_markup=types.ReplyKeyboardMarkup(
                              keyboard=[
@@ -264,11 +331,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_7_13)
 
 
 # выбор 14
-@dp.message(lambda message: message.text == "Попытаться преодолеть их")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_7_13, F.text.in_(choosing_step_7_13[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Преодолев ловушки, вы находите цель своего путешествия, но перед вами возникает"
                          " выбор, что делать с артефактом:",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -282,11 +350,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_9_12_14_17)
 
 
 # выбор 15
-@dp.message(lambda message: message.text == "Вернуться назад")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_7_13, F.text.in_(choosing_step_7_13[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Вернувшись назад, вы обнаруживаете, что Чича (Ци Ци) оказалась вашим союзником и помогает"
                          " вам пройти через опасности.",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -300,11 +369,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_15)
 
 
 # выбор 16
-@dp.message(lambda message: message.text == "Попытаться избежать заклятия")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_8, F.text.in_(choosing_step_8[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Избежав ловушки, вы достаёте артефакт, но перемещаетесь в окружение монстров.",
                          reply_markup=types.ReplyKeyboardMarkup(
                              keyboard=[
@@ -317,11 +387,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_16)
 
 
 # выбор 17
-@dp.message(lambda message: message.text == "Активировать его ради сокровища")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_8, F.text.in_(choosing_step_8[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Активировав ловушку, вы сталкиваетесь со странным дымом, но отмахиваетесь от него и "
                          "получаете артефакт и сокровище.",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -335,11 +406,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_9_12_14_17)
 
 
 # выбор 18
-@dp.message(lambda message: message.text == "Забрать всё себе")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_9_12_14_17, F.text.in_(choosing_step_9_12_14_17[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Получив артефакт, вы чувствуете удовлетворение, но тут же перед вами возникает новая "
                          "проблема: как его использовать?",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -353,11 +425,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_18_26)
 
 
 # выбор 19
-@dp.message(lambda message: message.text == "Забрать и вернуться к группе")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_9_12_14_17 or Available.available_step_21, F.text.in_(choosing_step_9_12_14_17[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Вы возвращаетесь к группе, но они не прошли все припятствия вместе с вами. "
                          "Стоит ли с ними делиться сокровищами и показать им артефакт?",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -371,11 +444,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_19)
 
 
 # концовка 20
-@dp.message(lambda message: message.text == "Пойти к выходу из пещеры одному, пряча артефакт")
-async def fight_dragon(message: types.Message):
+@dp.message(Available.available_step_19, F.text.in_(choosing_step_19[1]))
+async def fight_dragon(message: types.Message, state: FSMContext):
     await message.answer("Разозленный Сяо вместе с группой нападает на Вас, пытаясь похитить сокровище. Истощенные "
                          "поиском сокровищ вы проигрываете эту битву, но они не находят у Вас ничего ценного и уходят."
                          "\nПоздравляю вас, маленький жадный и эгоистичный говнюк, вы заслужили свой темный артефакт."
@@ -383,11 +457,12 @@ async def fight_dragon(message: types.Message):
                          "\n"
                          "\nP.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # выбор 21
-@dp.message(lambda message: message.text == "Бежать с артефактом")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_10, F.text.in_(choosing_step_10[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Бежа от монстров с артефактом, вы случайно активируете его способности и получаете"
                          " его благословение. Монстры теряют вас.",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -402,11 +477,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_21)
 
 
 # выбор 22
-@dp.message(lambda message: message.text == "Попытаться использовать артефакт против врагов")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_10, F.text.in_(choosing_step_10[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Используя артефакт против монстров, вы одерживаете победу, но теперь перед вами "
                          "возникает выбор: использовать его дальше или вернуть на место?",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -420,11 +496,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_22)
 
 
 # выбор 23
-@dp.message(lambda message: message.text == "Попытаться забрать артефакт себе")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_11, F.text.in_(choosing_step_11[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Забирая артефакт у Чичи (Ци Ци), вы обнаруживаете, что она находится под заклятием.",
                          reply_markup=types.ReplyKeyboardMarkup(
                              keyboard=[
@@ -437,11 +514,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_23)
 
 
 # выбор 24
-@dp.message(lambda message: message.text == "Уйти, чтобы избежать конфликта")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_11, F.text.in_(choosing_step_11[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Уйдя от Чичи (Ци Ци), вы продолжаете свой путь и находите другой способ "
                          "выйти из пещеры.",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -455,11 +533,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_24)
 
 
 # концовка 25
-@dp.message(lambda message: message.text == "Продолжить путь вместе с ней")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_15, F.text.in_(choosing_step_15[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Продолжая свой путь вместе с Чичей, вы обнаруживаете узкий проход в стене. "
                          "Чича маленькая, поэтому боиться идти первой. Вы берете её за ручку и протискиваетесь в "
                          "проход. Почти дойдя до конца вы чувствуете адскую боль. Чича оказалась под заклятием и"
@@ -471,11 +550,12 @@ async def go_left(message: types.Message):
                          "\n"
                          "\nP.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # выбор 26
-@dp.message(lambda message: message.text == "Продолжить свой путь в одиночестве")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_15, F.text.in_(choosing_step_15[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Продолжая свой путь одни, вы находите желанное сокровище, но вот вопрос: "
                          "Что вы будете с ним делать?",
                          reply_markup=types.ReplyKeyboardMarkup(
@@ -489,11 +569,12 @@ async def go_left(message: types.Message):
                              ],
                              resize_keyboard=True
                          ))
+    await state.set_state(Available.available_step_18_26)
 
 
 # концовка 27
-@dp.message(lambda message: message.text == "Сразиться с врагами")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_16, F.text.in_(choosing_step_16[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Вы были наказаны за самоуверенность и отсутствие хитрости. Проиграв монстрам, вы остались "
                          "в пещере под их стражей навсегда и попали под влияние артефакта, став заманивать других "
                          "путешественников в ловушку."
@@ -502,23 +583,25 @@ async def go_left(message: types.Message):
                          "\n"
                          "\nP.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 28
-@dp.message(lambda message: message.text == "Попытаться убежать")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_16, F.text.in_(choosing_step_16[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Убежав от монстров, вы потеряли возможность получить сокровища, зато остались в живых."
-                         "Иногда это само по себе достижение :)."
-                         ""
-                         "Удачи в следующих приключениях!"
-                         ""
-                         "P.S. Если хотите пройти квест еще раз - введите /start",
+                         "Иногда это само по себе достижение :). \n"
+                         "\n"
+                         "\nУдачи в следующих приключениях!"
+                         "\n"
+                         "\nP.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 29
-@dp.message(lambda message: message.text == "Решить этот вопрос самостоятельно")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_18_26, F.text.in_(choosing_step_18_26[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Хм ну тут, конечно, зависит от вашего интеллекта, но, просто чтоб ты знал: трогать "
                          "всё, что находишь в странных пещерах не стоит, ты не всегда можешь предугадать последствия..."
                          "В этот раз тебе повезло и удалось выбраться из пещеры живым, но артефакт ты, к сожалению, "
@@ -529,11 +612,12 @@ async def go_left(message: types.Message):
                          ""
                          "P.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 30
-@dp.message(lambda message: message.text == "Вернуться домой и посоветоваться с Чжун Ли")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_18_26, F.text.in_(choosing_step_18_26[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Чжун Ли благодарит вас за найденный артефакт и забирает его себе, пряча в сокровищницу, "
                          "но плаит вам кругленькую сумму за хорошую находку. Поздравляю с хорошей концовкой, денюжки "
                          "любят все!"
@@ -542,11 +626,12 @@ async def go_left(message: types.Message):
                          "\n"
                          "\nP.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 31
-@dp.message(lambda message: message.text == "Поделиться сокровищами с группой")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_19, F.text.in_(choosing_step_19[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Вместе с группой вы продаете найденный артефакт и заслуживаете уважение Сяо. Жаль, что"
                          " деньги вы делили поровну и вам досталась всего пара монет. "
                          "\n"
@@ -554,11 +639,12 @@ async def go_left(message: types.Message):
                          "\n"
                          "P.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 32
-@dp.message(lambda message: message.text == "Убить всю группу и переместиться с артефактом подальше от пещеры")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_21, F.text.in_(choosing_step_21[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Артефакт почувствовал вашу ярость и запутал ваш разум, подчинив себе. Теперь вы навсегда"
                          " заперты в пещере и обречены заманивать других путешественников в ловушку."
                          "\n"
@@ -566,11 +652,12 @@ async def go_left(message: types.Message):
                          "\n"
                          "P.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 33
-@dp.message(lambda message: message.text == "Продолжить использование")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_22, F.text.in_(choosing_step_22[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Артефакт почувствовал вашу ярость и запутал ваш разум, подчинив себе. Теперь вы навсегда"
                          " заперты в пещере и обречены заманивать других путешественников в ловушку."
                          "\n"
@@ -578,11 +665,12 @@ async def go_left(message: types.Message):
                          "\n"
                          "P.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 34
-@dp.message(lambda message: message.text == "Вернуть на место")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_22, F.text.in_(choosing_step_22[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Оставив артефакт, вы направились на поиски выхода. Вам удалось выбраться из пещеры и даже"
                          " добраться до Чжун Ли. Он сообщил вам, что вы нашли очень ценный артефакт, но найти обратный "
                          "путь к нему вы, к сожалению, не смогли. Вы потеряли возможность получить сокровища, "
@@ -593,11 +681,12 @@ async def go_left(message: types.Message):
                          "\n"
                          "P.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 35
-@dp.message(lambda message: message.text == "Рискнуть и сразиться с ней")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_23, F.text.in_(choosing_step_23[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Мне очень жаль, но вас угандошила маленькая девочка. Надеюсь, вы возродитесеь где-нибудь"
                          " подальше от этой пещеры и забудете это как страшный сон."
                          "\n"
@@ -605,11 +694,12 @@ async def go_left(message: types.Message):
                          "\n"
                          "P.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 36
-@dp.message(lambda message: message.text == "Обнять её и бежать со всех ног")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_23, F.text.in_(choosing_step_23[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Вам удалось выбраться из пещеры. Чича бежала за вами со всех ног и только после выхода "
                          "вы поняли, что заклятие пропало. Вы вместе добрались до Чжун Ли. Он сообщил вам, что вы нашли"
                          " очень ценный артефакт, но найти обратный путь к нему вы, к сожалению, не смогли. Вы потеряли"
@@ -621,11 +711,12 @@ async def go_left(message: types.Message):
                          "\n"
                          "P.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 37
-@dp.message(lambda message: message.text == "Продолжить поиски артефакта")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_24, F.text.in_(choosing_step_24[0]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Вы нашли только разозленную группу, которая жаждала получить артефакт. Он затуманил им "
                          "разум, всем кроме Сяо. Вместе вам удалось выбраться из пещеры с серьезными ранами."
                          "Больше возвращаться вы туда не планируете, но вряд ли у вас скоро получится вернутся к "
@@ -636,11 +727,12 @@ async def go_left(message: types.Message):
                          "\n"
                          "P.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # концовка 38
-@dp.message(lambda message: message.text == "Выйти из пещеры")
-async def go_left(message: types.Message):
+@dp.message(Available.available_step_24, F.text.in_(choosing_step_24[1]))
+async def go_left(message: types.Message, state: FSMContext):
     await message.answer("Вам удалось выбраться из пещеры и даже добраться до Чжун Ли. Он сообщил вам, что вы "
                          "нашли очень ценный артефакт, но найти обратный путь к нему вы, к сожалению, не смогли. Вы "
                          "потеряли возможность получить сокровища, зато остались в живых."
@@ -650,6 +742,7 @@ async def go_left(message: types.Message):
                          "\n"
                          "P.S. Если хотите пройти квест еще раз - введите /start",
                          reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(Available.available_end_step)
 
 
 # Этот хэндлер будет срабатывать на команду "/help"
@@ -657,6 +750,7 @@ async def go_left(message: types.Message):
 async def process_help_command(message: Message):
     await message.answer(
         "Я небольшой квест-бот. Вместе со мной ты можешь отправиться в путешествие в мире игры Genshin Impact"
+        "\nНажмай кнопки, которые появляются у тебя на экране и двигайся по приключению."
     )
 
 
